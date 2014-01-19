@@ -1,0 +1,11 @@
+(ns kancolle-worker.setting)
+
+(def token nil)
+
+(def starttime nil)
+
+(def client-agent "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/31.0.1650.63 Chrome/31.0.1650.63 Safari/537.36")
+
+(def server-port 80)
+
+(def verno 1)
