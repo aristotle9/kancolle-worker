@@ -1,14 +1,20 @@
 (ns kancolle-worker.api
   (:use [kancolle-worker.http :only [defkcs-api]]))
 
+;;return ship data
 (defkcs-api ship "~get_member/ship" [])
 
 ;;sort-key 1
 ;;sort-order 2
-(defkcs-api ship2 "~get_member/ship2" [sort-key sort-order])
+;;return :data ship updated partial data
+;;return :data-deck deck
+(defkcs-api ship2 "~get_member/ship2" [sort-key sort-order]
+  (select-keys result [:data :data-deck]))
 
 ;;sort-key 1
 ;;sort-order 2
+;;return :ship-data ship updated partial data
+;;return :deck-data deck
 (defkcs-api ship3 "~get_member/ship3" [sort-key sort-order])
 
 (defkcs-api ndock "~get_member/ndock" [])
