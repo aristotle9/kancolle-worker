@@ -31,6 +31,11 @@
   (swap! *state* assoc :deck-ports deck-ports)
   true)
 
+(defn update-docks!
+  [docks]
+  (swap! *state* assoc :docks docks)
+  true)
+
 (defn ship!
   []
   (let [ships (api/ship)]
@@ -59,6 +64,12 @@
     (when-not (empty? deck-ports)
       (update-deck-ports! deck-ports))))
 
+(defn ndock!
+  []
+  (let [docks (api/ndock)]
+    (when-not (empty? docks)
+      (update-docks! docks))))
+
 (defn charge!
   [id]
   (let [ship-ids
@@ -83,13 +94,19 @@
     (reduce (fn [[s t] [x y]]
               [(+ s x) (+ t y)]) [0 0])))
 
-(defn mission-result!
-  [id]
-  (let [{[_ _ time-complete] :mission} (id->fleet id)
-        now (.getTime (java.util.Date.))]
-    (if (and (pos? time-complete)
-             (> now time-complete))
-      (api/mission-result id))))
+(defn mission-check!
+  []
+  (loop [id 1]
+    (let [{[_ mission-id time-complete] :mission} (id->fleet id)]
+      (when time-complete;;id is valid
+        (if (pos? time-complete);;has mission
+          (let [now (.getTime (java.util.Date.))]
+            (when (and (> now time-complete);;timeup
+                       (api/mission-result id));;success
+              (charge! id)
+              (api/mission-start id mission-id);;repeat mission
+              )))
+        (recur (inc id))))))
 
 (defn stype->rate
   "表格资料来自:
@@ -159,3 +176,54 @@
         m (rem mins 60)
         hours (quot mins 60)]
     (format "%d:%02d:%02d" hours m s)))
+
+(defn empty-docks
+  []
+  (let [docks (:docks @*state*)]
+    (map :id (filter #(= 0 (:state %)) docks))))
+
+(defn in-dock-ships
+  []
+  (->> @*state*
+    :docks
+    (filter #(= 1 (:state %)))
+    (map :ship-id)))
+
+(defn broken-ships
+  "return ships need repairing; order by repair time ascending"
+  []
+  (->>
+    @*state*
+    :ships
+    (filter (fn [{:keys [maxhp nowhp]}] (not= nowhp maxhp)))
+    (map :id)
+    (sort-by repair-time)
+    (filter #(not ((set (in-dock-ships)) %)))))
+
+(defn repair-ships!
+  []
+  (let [docks (empty-docks)
+        ships (broken-ships)]
+    (when-not (or (empty? docks)
+                  (empty? ships))
+      (doall
+        (map (fn [ship-id ndock-id]
+               (api/nyukyo-start ship-id ndock-id 0))
+             ships docks))
+      true)))
+
+(defn login!
+  []
+  (api/basic)
+  (ship!)
+  true)
+
+(defn front!
+  []
+  (api/logincheck)
+  (api/material)
+  (deck-port!)
+  (ndock!)
+  (ship3!)
+  (api/basic)
+  true)

@@ -40,7 +40,8 @@
 ;;ship_id 55
 ;;ndock_id 1..
 ;;highspeed 0/1
-(defkcs-api nyukyo-start "~req_nyukyo/start" [ship-id ndock-id highspeed])
+(defkcs-api nyukyo-start "~req_nyukyo/start" [ship-id ndock-id highspeed]
+  result)
 
 ;;kind 1 fueld only 2 bullet only 3 all
 ;;id-items ship ids
