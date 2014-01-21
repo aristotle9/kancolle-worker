@@ -90,3 +90,72 @@
     (if (and (pos? time-complete)
              (> now time-complete))
       (api/mission-result id))))
+
+(defn stype->rate
+  "表格资料来自:
+   http://wikiwiki.jp/kancollecn/?%C6%FE%B5%F4
+   https://bitbucket.org/koedoyoshida/kancolle-timer-for-firefox/src/d422c1cc532013c8fad4fe01f01caf5a763dcddf/chrome/content/data.js?at=dev
+   http://www56.atwiki.jp/kancolle/pages/432.html
+     正确性未经完全验证(本提督没有那么多类型的船)
+  "
+  [stype]
+  (if-let [r
+           ({
+             2 1;;驱逐舰
+             3 1;;轻巡
+             4 1;;重装雷巡
+             5 1.5;;重巡
+             6 1.5;;航空巡洋舰
+             7 1.5;;轻空母
+             8 1.5;;低速战舰
+             9 2;;高速战舰
+             10 2;;航空战舰
+             11 2;;正规空母
+             13 0.5;;潜水艇
+             14 1;;潜水空母
+             15 1;;补给舰??
+             16 1;;水上机母舰
+             17 1;;扬陆舰/登陆舰
+             18 1;;装甲空母
+             }
+             stype)]
+    r
+    1))
+
+(defn lv->a
+  [lv]
+  (cond
+    (<= lv 14) 60
+    (<= lv 19) 70
+    (<= lv 26) 80
+    (<= lv 35) 90
+    (<= lv 46) 100
+    (<= lv 59) 110
+    (<= lv 74) 120
+    (<= lv 91) 130
+    :else 140))
+
+(defn repair-time
+  "http://wikiwiki.jp/kancollecn/?%C6%FE%B5%F4
+   return seconds"
+  [id]
+  (let [{:keys [lv stype nowhp maxhp]} (id->ship id)
+        diffhp (- maxhp nowhp)
+        rate (stype->rate stype)]
+    (if (zero? diffhp)
+      0
+      (if (<= lv 11)
+        (+ 30
+           (long (* diffhp rate lv 10)))
+        (+ 30
+           (long (* diffhp rate (+ (lv->a lv)
+                                   (* lv 5)))))))))
+
+(defn format-seconds
+  [secs]
+  (let [secs (long secs)
+        s (rem secs 60)
+        mins (quot secs 60)
+        m (rem mins 60)
+        hours (quot mins 60)]
+    (format "%d:%02d:%02d" hours m s)))
