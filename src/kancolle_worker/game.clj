@@ -215,8 +215,7 @@
 (defn login!
   []
   (api/basic)
-  (ship!)
-  true)
+  (ship!))
 
 (defn front!
   []
@@ -225,5 +224,4 @@
   (deck-port!)
   (ndock!)
   (ship3!)
-  (api/basic)
-  true)
+  (api/basic))
