@@ -225,3 +225,30 @@
   (ndock!)
   (ship3!)
   (api/basic))
+
+(defn next-events
+  "下次事件的时间"
+  []
+  (let [repaire-events
+        (->> @*state*
+          :docks
+          (map :complete-time))
+        fleet-events
+        (->> @*state*
+          :deck-ports
+          (map :mission)
+          (map #(% 2)))]
+    (->> (concat repaire-events fleet-events)
+      (filter (complement zero?)))))
+
+(defn next-events!
+  "刷新时间,返回下次事件的时间"
+  []
+  (ndock!)
+  (deck-port!)
+  (next-events))
+
+(defn next-events-info
+  "具体事件的信息"
+  []
+  (select-keys @*state* [:deck-ports :docks]))
